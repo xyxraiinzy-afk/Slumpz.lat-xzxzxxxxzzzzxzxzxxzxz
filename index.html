@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Slumpz</title>
+<style>
+  html, body {
+    margin: 0; 
+    padding: 0; 
+    overflow: hidden; 
+    background: black; 
+    height: 100%;
+    font-family: monospace, monospace;
+  }
+
+  canvas {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    pointer-events: none;
+    z-index: 1;
+    filter: blur(4px);
+    transition: filter 0.5s ease;
+    background: black;
+  }
+
+  #overlay {
+    position: fixed;
+    top: 0; 
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: black;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: white; 
+    font-size: 1.5rem;
+    user-select: none;
+    cursor: pointer;
+    z-index: 10; 
+    font-family: 'MinecraftItalic', monospace;
+  }
+
+  #overlay.hidden {
+    display: none;
+  }
+
+ #centerBox {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 675px;
+  height: 360px;
+  transform: translate(-50%, -50%);
+  background: rgba(15, 15, 15, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  backdrop-filter: blur(3px) saturate(120%);
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+  transition: transform 0.2s ease, opacity 0.8s ease;
+  display: flex;
+  align-items: center;
+  padding-left: 30px;
+  opacity: 0;
+  z-index: 5;
+}
+
+#boxClock {
+  position: absolute;
+  bottom: 15px;
+  left: 15px;
+  font-family: 'MinecraftItalic', monospace;
+  font-size: 1rem;
+  color: white;
+  user-select: none;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+#boxClock.visible {
+  opacity: 1;
+}
+
+  #centerBox.visible {
+    opacity: 1;
+  }
+
+  #profilePic {
+    position: absolute;
+    top: 35px;
+    left: 25px;
+    width: 124px;     
+    height: 124px;
+    border-radius: 50%; 
+    object-fit: cover;  
+    opacity: 0; 
+    transition: opacity 0.5s ease;
+    z-index: 10;
+  }
+
+  #profilePic.visible {
+    opacity: 1;
+  }
+
+#userInfo {
+  position: absolute;
+  top: 65px;
+  left: 160px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  font-family: 'MinecraftItalic', monospace;
+  color: white;
+}
+
+  #userInfo.visible {
+    opacity: 1;
+  }
+
+  #userName {
+  margin: 0 0 5px 0;
+  font-size: 2rem;
+}
+
+#userDesc {
+  margin: -5px 0 0 0;
+  font-size: 1.2rem;
+  min-height: 1em;
+  white-space: nowrap;
+  overflow: hidden;
+  position: relative;
+  border-right: none;
+  line-height: 1.2rem;
+}
+
+#userDesc::after {
+  content: "";
+  display: inline-block;
+  width: 2px;
+  height: 1.2rem;
+  background-color: white;
+  vertical-align: bottom;
+  animation: blink 1s step-start infinite;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+
+  #boxClock {
+    position: absolute;
+    bottom: 15px;
+    left: 15px;
+    font-family: 'MinecraftItalic', monospace; 
+    font-size: 1rem;
+    color: white;
+    user-select: none;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+
+  #boxClock.visible {
+    opacity: 1;
+  }
+
+  @font-face {
+    font-family: 'MinecraftItalic';
+    src: url('MinecraftItalic-R8Mo.otf') format('opentype');
+    font-weight: normal;
+    font-style: normal;
+  }
+
+  #centerBox,
+  #profilePic,
+  #userInfo,
+  #boxClock {
+    opacity: 0;
+    transition: opacity 0.5s ease;
+  }
+
+  #centerBox.visible,
+  #profilePic.visible,
+  #userInfo.visible,
+  #boxClock.visible {
+    opacity: 1;
+  }
+
+
+  #noWidgetText {
+  font-family: 'MinecraftItalic', monospace;
+  color: white;
+  font-size: 1.5rem;
+  position: absolute;
+  top: 60%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 1;
+  pointer-events: none;
+}
+  
+#discordWidget {
+  position: absolute;
+  bottom: 65px;
+  right: 28px;
+  width: 625px;
+  height: 80px;
+  background: rgba(25, 25, 25, 0.65);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  color: white;
+  font-family: 'MinecraftItalic', monospace;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+}
+
+#discordPfp {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  margin-left: 8px;
+  margin-right: 12px;
+  object-fit: cover;
+}
+
+#discordInfo {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+#discordNameContainer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+#discordName {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #fff;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+#discordBadges {
+  display: flex;
+  align-items: center;
+}
+
+#discordBadges img {
+  width: 23px;
+  height: 23px;
+  margin-left: 2px;
+  transform: translateY(1px);
+}
+
+#discordBadges img:hover {
+  transform: scale(1.01);
+  filter: brightness(1.2);
+}
+
+#discordActivity {
+  font-size: 0.9rem;
+  color: #bbb;
+  margin-top: 3px;
+}
+
+#discordStatusWrapper {
+  position: absolute;
+  bottom: 20px;
+  right: 32px;
+  width: 24px;
+  height: 24px;
+}
+
+#discordStatus {
+  position: absolute;
+  bottom: 20px;
+  left: 64px;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: rgba(25, 25, 25, 0.9);
+  border: 4px solid rgba(25, 25, 25, 0.9);
+  z-index: 3;
+}
+
+</style>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const titles = [
+      "Slumpz",
+      "@d91c",
+    ];
+    let i = 0;
+    setInterval(() => {
+      document.title = titles[i];
+      i = (i + 1) % titles.length;
+    }, 250);
+
+    document.addEventListener('contextmenu', e => e.preventDefault());
+
+    document.addEventListener('keydown', e => {
+      if(e.key === "F12" || 
+         (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "J")) || 
+         (e.ctrlKey && e.key === "U")) {
+        e.preventDefault();
+        window.location.href = "https://lol.wtf";
+      }
+    });
+  });
+
+</script>
+</head>
+<body>
+
+<div id="overlay">// Click //</div>
+  
+<div id="centerBox">
+  <img id="profilePic" src="pfp.png" alt="Profile Picture" />
+  <div id="userInfo">
+    <h2 id="userName">Slumpz</h2>
+    <p id="userDesc"></p>
+  </div>
+  <div id="boxClock"></div> 
+
+  <div id="discordWidget">
+    <div id="discordPfpContainer">
+      <img id="discordPfp" src="" alt="Discord Profile Picture" />
+      <img id="discordStatus" src="offline.png" alt="Discord Status" />
+    </div>
+    
+    <div id="discordInfo">
+      <div id="discordNameContainer">
+        <h3 id="discordName">Loading...</h3>
+        <div id="discordBadges"></div>
+      </div>
+      <p id="discordActivity">Loading activity...</p>
+    </div>
+  </div>
+</div>
+  
+<audio id="audio" src="Sound.mp3" loop></audio>
+<div id="clock"></div>
+  
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+
+  const titles = [
+    "Slumpz",
+    "@d91c",
+  ];
+  let i = 0;
+  setInterval(() => {
+    document.title = titles[i];
+    i = (i + 1) % titles.length;
+  }, 250);
+
+  document.addEventListener('contextmenu', e => e.preventDefault());
+
+  document.addEventListener('keydown', e => {
+    if (e.key === "F12" || 
+        (e.ctrlKey && e.shiftKey && (e.key === "I" || e.key === "J")) || 
+        (e.ctrlKey && e.key === "U")) {
+      e.preventDefault();
+      window.location.href = "https://lol.wtf";
+    }
+  });
+});
+
+const canvas = document.createElement('canvas');
+document.body.appendChild(canvas);
+const ctx = canvas.getContext('2d');
+
+let width, height;
+function resizeCanvas() {
+  width = window.innerWidth;
+  height = window.innerHeight;
+  canvas.width = width;
+  canvas.height = height;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+class Snowflake {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+    this.radius = Math.random() * 2 + 1;
+    this.speedY = Math.random() * 1.3 + 2;
+    this.speedX = 0;
+    this.opacity = 1;
+    this.stuck = false;
+    this.fadeStarted = false;
+  }
+
+  update(driftDirection, speedMultiplier, isIdle) {
+    if (this.stuck) {
+      if (!this.fadeStarted) this.fadeStarted = true;
+      else this.opacity -= 0.01;
+
+      if (this.opacity <= 0) this.reset(driftDirection, isIdle);
+      return;
+    }
+
+    let horizontalSpeed = isIdle ? (this.speedX || (this.speedX = (Math.random() - 0.5) * 0.2)) : driftDirection * 0.45;
+
+    this.x += horizontalSpeed;
+    this.y += this.speedY * speedMultiplier;
+
+    if (this.x < 0) this.x = width;
+    if (this.x > width) this.x = 0;
+
+    let fadeStartY = height * 0.86;
+    if (this.y >= fadeStartY && !this.stuck) {
+      let progress = (this.y - fadeStartY) / (height - fadeStartY);
+      this.opacity = 1 - progress;
+      if (progress >= 1) {
+        this.stuck = true;
+        this.opacity = 0;
+        this.y = height;
+      }
+    }
+  }
+
+  reset(driftDirection, isIdle) {
+    this.x = Math.random() * width;
+    this.y = 0;
+    this.radius = Math.random() * 2 + 1;
+    this.speedY = Math.random() * 0.8 + 1.2;
+    this.opacity = 1;
+    this.stuck = false;
+    this.fadeStarted = false;
+    this.speedX = isIdle ? (Math.random() - 0.5) * 0.2 : driftDirection * 0.15;
+  }
+
+  draw() {
+    ctx.beginPath();
+    ctx.fillStyle = `rgba(255,255,255,${this.opacity})`;
+    ctx.shadowColor = 'white';
+    ctx.shadowBlur = 4 * this.opacity;
+    ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+const snowflakes = [];
+const snowflakeCount = 100;
+for (let i = 0; i < snowflakeCount; i++) {
+  snowflakes.push(new Snowflake(Math.random() * width, Math.random() * height));
+}
+
+let mouseX = window.innerWidth / 2;
+let lastMoveTime = Date.now();
+
+window.addEventListener('mousemove', e => {
+  mouseX = e.clientX;
+  lastMoveTime = Date.now();
+});
+
+function animateSnowflakes() {
+  ctx.clearRect(0, 0, width, height);
+
+  const now = Date.now();
+  const isIdle = (now - lastMoveTime) > 30000;
+
+  const center = width / 2;
+  const threshold = width / 10;
+  let driftDirection = 0;
+  let speedMultiplier = 1;
+
+  if (!isIdle) {
+    const maxDrift = 1;
+    let distanceFromCenter = mouseX - center;
+    if (distanceFromCenter > threshold) distanceFromCenter = threshold;
+    if (distanceFromCenter < -threshold) distanceFromCenter = -threshold;
+    driftDirection = (distanceFromCenter / threshold) * maxDrift;
+    speedMultiplier = 1.1;
+  }
+
+  for (const flake of snowflakes) {
+    flake.update(driftDirection, speedMultiplier, isIdle);
+    flake.draw();
+  }
+
+  requestAnimationFrame(animateSnowflakes);
+}
+animateSnowflakes();
+
+const overlay = document.getElementById('overlay');
+const audio = document.getElementById('audio');
+const centerBox = document.getElementById('centerBox');
+const boxClock = document.getElementById('boxClock');
+const profilePic = document.getElementById('profilePic');
+const userInfo = document.getElementById('userInfo');
+const userDesc = document.getElementById('userDesc');
+
+const maxTilt = 18;
+const smoothness = 0.1;
+
+let currentX = 0, currentY = 0;
+let targetX = 0, targetY = 0;
+let boxRect = centerBox.getBoundingClientRect();
+
+function updateBoxTilt(e) {
+  const x = e.clientX - boxRect.left;
+  const y = e.clientY - boxRect.top;
+  const percentX = (x / boxRect.width) - 0.5;
+  const percentY = (y / boxRect.height) - 0.5;
+
+  targetX = percentY * maxTilt;
+  targetY = percentX * -maxTilt;
+}
+
+function animateTilt() {
+  currentX += (targetX - currentX) * smoothness;
+  currentY += (targetY - currentY) * smoothness;
+  centerBox.style.transform = `translate(-50%, -50%) perspective(1000px) rotateX(${currentX}deg) rotateY(${currentY}deg)`;
+  requestAnimationFrame(animateTilt);
+}
+
+centerBox.addEventListener('mouseenter', () => {
+  boxRect = centerBox.getBoundingClientRect();
+});
+
+centerBox.addEventListener('mousemove', updateBoxTilt);
+centerBox.addEventListener('mouseleave', () => {
+  targetX = 0;
+  targetY = 0;
+});
+
+animateTilt();
+
+function updateBoxClock() {
+  const now = new Date();
+  let hours = now.getHours();
+  const minutes = now.getMinutes();
+  const seconds = now.getSeconds();
+  const ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12 || 12;
+  boxClock.textContent = `${hours}:${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')} ${ampm}`;
+}
+
+const descriptions = ["@d91c", "Haylie <3", "Vile is awesome"];
+let descIndex = 0;
+let charIndex = 0;
+let deleting = false;
+
+function typeWriter() {
+  const current = descriptions[descIndex];
+  if (!deleting) {
+    userDesc.textContent = current.substring(0, charIndex + 1);
+    charIndex++;
+    if (charIndex === current.length) {
+      deleting = true;
+      setTimeout(typeWriter, 1000);
+      return;
+    }
+  } else {
+    userDesc.textContent = current.substring(0, charIndex - 1);
+    charIndex--;
+    if (charIndex === 0) {
+      deleting = false;
+      descIndex = (descIndex + 1) % descriptions.length;
+    }
+  }
+  setTimeout(typeWriter, deleting ? 65 : 150);
+}
+
+overlay.addEventListener('click', () => {
+  canvas.style.filter = 'none';
+  overlay.classList.add('hidden');
+  audio.play();
+
+  setTimeout(() => {
+    centerBox.classList.add('visible');
+    profilePic.classList.add('visible');
+
+fetch("https://api.Slumpz.lol/api/user")
+  .then(r => r.json())
+  .then(user => {
+
+    const nameText = `@${user.username}  /  ${user.globalName || ""}`;
+    document.getElementById("discordName").textContent = nameText.trim();
+    document.getElementById("discordPfp").src =
+      `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=512`;
+
+    const statusImg = document.getElementById("discordStatus");
+    switch (user.status) {
+      case "online":
+        statusImg.src = "online.png";
+        break;
+      case "idle":
+        statusImg.src = "idle.png";
+        break;
+      case "dnd":
+        statusImg.src = "dnd.png";
+        break;
+      default:
+        statusImg.src = "offline.png";
+        break;
+    }
+
+    const badgesDiv = document.getElementById("discordBadges");
+    badgesDiv.innerHTML = "";
+
+    const activityEl = document.getElementById("discordActivity");
+
+    if (user.status === "offline") {
+      let lastSeenText = "last seen recently";
+
+      if (user.last_seen) {
+        const lastSeenMs = Date.now() - new Date(user.last_seen).getTime();
+        const seconds = Math.floor(lastSeenMs / 1000);
+        const minutes = Math.floor(seconds / 60);
+        const hours = Math.floor(minutes / 60);
+        const days = Math.floor(hours / 24);
+
+        if (days > 0)
+          lastSeenText = `last seen ${days} day${days > 1 ? "s" : ""} ago`;
+        else if (hours > 0)
+          lastSeenText = `last seen ${hours} hour${hours > 1 ? "s" : ""} ago`;
+        else if (minutes > 0)
+          lastSeenText = `last seen ${minutes} minute${minutes > 1 ? "s" : ""} ago`;
+        else
+          lastSeenText = `last seen ${seconds} second${seconds > 1 ? "s" : ""} ago`;
+      }
+
+      activityEl.textContent = lastSeenText;
+    } else {
+      activityEl.textContent = user.activity || "No activity";
+    }
+
+    if (user.badges && user.badges.length > 0) {
+      user.badges.forEach(url => {
+        const img = document.createElement("img");
+        img.src = url;
+        img.alt = "Badge";
+
+        if (url.includes("2ba85e8026a8614b640c2837bcdfe21b")) {
+          img.title = "Nitro Subscriber";
+        } else if (url.includes("72bed924410c304dbe3d00a6e593ff59")) {
+          img.title = "Server Booster";
+        } else {
+          img.title = "Badge";
+        }
+
+        badgesDiv.appendChild(img);
+      });
+    }
+  })
+  .catch(() => {
+    document.getElementById("discordName").textContent =
+      "Widget failed to load";
+  });
+
+setTimeout(() => {
+  userInfo.classList.add("visible");
+  typeWriter();
+  boxClock.classList.add("visible");
+  updateBoxClock();
+  setInterval(updateBoxClock, 1000);
+}, 200);
+
+}, 100);
+});
+
+</script>
+
+</body>
+</html>
